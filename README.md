@@ -1,5 +1,21 @@
 # Final output local filter
 
+## Public quick start
+
+**What it is:** A deterministic, local-only Hermes Agent output filter with a reusable document checker.
+**Who it is for:** Hermes users who want narrow, reviewable cleanup or a local Markdown/document dry run.
+**Requirements:** Python 3 for the standalone checker; no external Python dependencies are declared. Hermes Agent is needed only for plugin integration. The filter makes no provider or network calls.
+
+```sh
+hermes plugins install kkwelfare/final-output-local-filter --no-enable
+hermes plugins enable final-output-local-filter
+```
+
+**Minimal local use:** `python3 check_document.py sample.md` runs a dry run; review the result before using the explicit `--apply` option.
+
+License: [MIT](LICENSE).
+
+
 A deterministic, local-only Hermes output filter and reusable document checker. `filter_core.py` preserves Markdown and protected syntax, applies narrowly bounded rules, and fails open on ambiguity. It never calls a provider.
 
 ## Components
