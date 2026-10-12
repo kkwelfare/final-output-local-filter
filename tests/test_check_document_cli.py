@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import subprocess
+import stat
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,3 +80,16 @@ def test_distinct_output_with_apply_rewrites_source(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert source.read_bytes() != original
     assert output.is_file()
+
+
+def test_apply_preserves_original_permission_bits(tmp_path: Path) -> None:
+    if not hasattr(stat, "S_IMODE") or not hasattr(os, "chmod"):
+        import pytest
+        pytest.skip("POSIX permission modes are unavailable")
+    source = tmp_path / "document.md"
+    output = tmp_path / "report.json"
+    source.write_text("必要なら設定を確認できます。\n", encoding="utf-8")
+    source.chmod(0o644)
+    result = invoke(source, output, apply=True)
+    assert result.returncode == 0, result.stderr
+    assert stat.S_IMODE(source.stat().st_mode) == 0o644

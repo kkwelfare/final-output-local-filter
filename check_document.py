@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+import stat
 
 try:  # Importable package entrypoint used by a document-checking profile.
     from .filter_core import filter_text
@@ -36,12 +37,17 @@ def check_path(path: Path, *, apply: bool = False) -> dict[str, object]:
         "text": result.text,
     }
     if apply and result.text != original:
+        original_mode = stat.S_IMODE(path.stat().st_mode)
         fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=str(path.parent), text=True)
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
                 handle.write(result.text)
                 handle.flush()
                 os.fsync(handle.fileno())
+                if hasattr(os, "fchmod"):
+                    os.fchmod(handle.fileno(), original_mode)
+                else:
+                    os.chmod(temp_name, original_mode)
             os.replace(temp_name, path)
             report["applied"] = True
         finally:
